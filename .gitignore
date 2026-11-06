@@ -1,0 +1,8 @@
+runs/
+__pycache__/
+.venv/
+.omo/
+*.egg-info/
+.env
+dist/
+build/

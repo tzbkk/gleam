@@ -1,0 +1,60 @@
+[project]
+name = "debian-gleam"
+version = "0.1.0"
+description = "Debian QA evidence-investigation infrastructure with bounded probes, an append-only evidence store, and a local-model investigation agent; upstream archaeology is the first built-in workflow"
+readme = "README.md"
+keywords = ["debian", "qa", "evidence", "investigation"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Quality Assurance",
+]
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [
+    {name = "Haolin Xue", email = "tzbkk@outlook.com"},
+]
+# Runtime third-party dependencies are deliberately minimal: trafilatura
+# (HTML body text), markdown-it-py (README markdown -> text), verbatimeter
+# (deterministic word-level quote verification) and pg8000 (pure-Python
+# PostgreSQL wire-protocol driver, so UDD access stays platform-neutral
+# with no psql binary and no native libpq).
+dependencies = [
+    "markdown-it-py==4.0.0",
+    "pg8000==1.31.6",
+    "trafilatura==2.3.1",
+    "verbatimeter==0.1.3",
+]
+
+[project.urls]
+Homepage = "https://github.com/tzbkk/gleam"
+Repository = "https://github.com/tzbkk/gleam"
+Issues = "https://github.com/tzbkk/gleam/issues"
+
+[project.scripts]
+gleam = "gleam.router:dispatch"
+
+[project.optional-dependencies]
+dev = []
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["gleam*"]
+
+[tool.setuptools.package-data]
+gleam = ["data/*.yml"]
+
+[tool.uv]
+# Dependency management and venv only; no publishing, no frameworks
+package = true
