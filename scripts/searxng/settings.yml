@@ -1,0 +1,60 @@
+# Gleam 自托管 SearXNG 配置（仅本机回环 127.0.0.1:8888）
+# 部署方式：scripts/searxng/start.sh —— docker run（无 compose、无 host 网络、
+# 无特权、无 docker socket 挂载、仅绑定回环）。
+#
+# 镜像验证于 searxng/searxng 2026.11.1-9ded3bec1（digest 见 ../digest.txt）：
+# - 真实 secret 由环境变量 SEARXNG_SECRET 注入（app 侧 settings_defaults.py
+#   environ_name='SEARXNG_SECRET' 覆盖本文件的占位值）；secret 生成进
+#   scripts/searxng/.searxng.env（git 忽略，绝不入库）。
+# - 入口脚本 FORCE_OWNERSHIP=false：只读挂载本文件，不做 chown。
+use_default_settings:
+  engines:
+    # 保守子集（keep_only 过滤默认引擎清单）：全部无 API key、无 captcha 绕过。
+    # 2026-11-02 本机实测（CERNET 出口，逐引擎真实 JSON 查询）：github 可用
+    # （30 结果/查询）；bing/mojeek/baidu/mwmbl 响应但恒 0 结果（对该出口
+    # IP 的 bot 墙，直连核实同样为空）；duckduckgo/wikipedia/wikidata/
+    # stackoverflow/startpage/qwant 网络不可达。故只纳入经实测出结果的
+    # github。其他网络部署时可自行增删；unresponsive_engines 如实透传，
+    # 实际可用性以 JSON 查询验证为准。
+    # 保守子集（keep_only 过滤默认引擎清单）：全部无 API key、无 captcha 绕过。
+    # 2026-11-02 本机实测（CERNET 出口，逐引擎真实 JSON 查询 q=librcd）：
+    # yandex 10 结果（tracker.debian.org 居首）、mwmbl 13、360search 7、
+    # github 6（需 engines= 显式选择，见下方 categories 覆盖）；sogou/quark
+    # 单词查询可用但 q=librcd+debian 为 0；baidu 返回 CAPTCHA（正是要排除的
+    # 情形）；duckduckgo/wikipedia/wikidata/stackoverflow/startpage/qwant/
+    # brave/yahoo 网络不可达或超时；bing/mojeek 恒 0 结果（bot 墙，直连核实
+    # 同样为空）。故只纳入经实测出结果的四个引擎；其他网络部署时可自行增删，
+    # unresponsive_engines 如实透传，实际可用性以 JSON 查询验证为准。
+    keep_only:
+      - yandex
+      - mwmbl
+      - 360search
+      - github
+
+engines:
+  # github 引擎默认类别是 it/repos，不含 general；gleam search_web 只按默认
+  # 类别查询（不带 engines 参数），故将其并入 general 类别。yandex/mwmbl/
+  # 360search 上游默认 disabled: true（仅 engines= 显式选择时生效），这里
+  # 显式启用；其余选项全部沿用默认。
+  - name: github
+    categories: [it, repos, general]
+  - name: yandex
+    disabled: false
+  - name: mwmbl
+    disabled: false
+  - name: 360search
+    disabled: false
+
+server:
+  # 占位符：真实值经 SEARXNG_SECRET 环境变量注入（.searxng.env，git 忽略）
+  secret_key: "injected-via-SEARXNG_SECRET-env-do-not-ship"
+  # limiter 关闭仅因端口只绑定 127.0.0.1（本机自用）；若改为对外暴露必须重新开启
+  limiter: false
+  image_proxy: false
+
+search:
+  # gleam search_web 依赖 JSON API：GET /search?q=&format=json&language=en
+  formats:
+    - html
+    - json
+
