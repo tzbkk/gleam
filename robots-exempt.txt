@@ -1,0 +1,6 @@
+# gleam robots.txt exemption list — operator-owned, read once at startup.
+# One hostname per line (case-insensitive; no scheme, no path, no port, no wildcards).
+# Listed hosts skip the robots.txt pre-fetch entirely; every other safety layer
+# (SSRF guards, DNS pinning, byte caps, per-host rate limit, timeouts) still applies.
+# Every exempted fetch is marked "robots: exempt" in its audit record.
+repology.org
