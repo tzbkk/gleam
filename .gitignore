@@ -1,0 +1,10 @@
+raw/
+runs/
+__pycache__/
+.venv/
+# 本地私有配置：SearXNG secret 等生成物不入库（scripts/searxng/ 由部署侧提供）
+scripts/searxng/.searxng.env
+scripts/searxng/digest.txt
+.sisyphus/
+docs/research/experiments/
+docs/research/survey/

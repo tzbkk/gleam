@@ -1,0 +1,24 @@
+[project]
+name = "gleam"
+version = "0.1.0"
+description = "Gleam / 荧 — minimal evidence-collecting monitor for Debian QA packages (bounded probes, append-only store, local-model investigation agent)"
+requires-python = ">=3.11"
+# 运行时第三方依赖刻意最小：仅 trafilatura（正文抽取）。
+# 其余全部标准库；测试在无 trafilatura 环境也能跑（回退路径已标注测试）。
+dependencies = [
+    "trafilatura==2.3.1",
+]
+
+[project.optional-dependencies]
+dev = []
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["gleam"]
+
+[tool.uv]
+# 仅做依赖管理 + venv；不发布、不加框架
+package = true

@@ -1,0 +1,4 @@
+# Pinned by pyproject.toml; listed for pip-style reproducible installs.
+# Install via: uv venv .venv && uv pip install -r requirements.txt
+# (or: uv sync)
+trafilatura==2.3.1
