@@ -1,6 +1,6 @@
 # Debian RM（包移除）流程全景
 
-**验证日期**：2026-10-28 ~ 2026-10-29（removals.txt 全量解析、UDD bugs/package_removal 实测、官方文档）
+**验证日期**：2026-10-28 ~ 2026-10-29（removals.txt 全量解析、UDD bugs/package_removal、官方文档）
 
 ## 1. 一句话
 
@@ -72,7 +72,7 @@ testing/stable 移除 → 改发 `release.debian.org` 伪包 + usertag `rm`。
 
 **没有邮件列表广播**：`dak rm` 只发 bug-close 邮件 + 可选 `-C` 抄送。
 
-removals.txt 条目格式（实测样本）：
+removals.txt 条目格式（样本）：
 
 ```
 =========================================================================
@@ -91,9 +91,9 @@ Also closing WNPP bug(s):
 > **编者注（2026-10-31）**：本节是调研期的下游动作草图，非已实现功能，也不代表当前框架（[06](06-framework-overview.md)）。仅"上游沉寂"不支持任何移除建议；Gleam 不自动发起 RM，建议的移除经人工复核后由人执行（Debian 侧的 auto-decrufter 是 Debian 自身机制）。当前决定与未决清单见 [11](11-decisions-and-open-questions.md)。
 
 ```
-UDD 诈尸 SQL（02 手册 ③）
-  → 三条件判死（03 案例 §6）→ "该埋"类 → 提示发 RM（模板见 03 §9，中位 34 天入土）
-  → "等诈尸"类 → 继续盯 upstream 信号（01 文档 §7 架构）
+UDD 诈尸 SQL（见 UDD 实战手册 02）
+  → 三条件判死（见 libgltf 案例 03"该埋三条件"）→ "该埋"类 → 提示发 RM（埋葬模板见 03 第 9 节，中位 34 天入土）
+  → "等诈尸"类 → 继续盯 upstream 信号（监控架构见 01 第 7 节历史草案）
   → RM 已发 → watch removals.txt 出现包名 = 葬礼确认
   → RM 被救（接养/撤回）→ 包回归，转入正常监控
 ```

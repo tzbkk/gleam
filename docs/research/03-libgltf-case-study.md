@@ -1,10 +1,10 @@
 # libgltf 案例研究：一个包的 12 年生死全程
 
-**验证日期**：2026-10-28 ~ 2026-10-29（UDD、popcon、SWH、sources.debian.org、邮件列表归档实测）
+**验证日期**：2026-10-28 ~ 2026-10-29（来源：UDD、popcon、SWH、sources.debian.org、邮件列表归档）
 
-libgltf 是 spring 项目的完美标本：既是"诈尸误报"的教训，也是"该埋未埋"的典型，还完整展示了人、公司、发行版的兴衰如何写进一个包的历史。
+libgltf 是 Gleam 项目的完美标本：既是"诈尸误报"的教训，也是"该埋未埋"的典型，还完整展示了人、公司、发行版的兴衰如何写进一个包的历史。
 
-## 1. 基本信息（UDD 实测）
+## 1. 基本信息（UDD 数据）
 
 | 项 | 值 |
 |---|---|
@@ -50,15 +50,15 @@ debian/copyright（原文，注意 2914 typo）:
 
 ## 5. 诈尸误报教训
 
-UDD 显示 upstream_version = **`0.1.0.gz`**——版本号里带 `.gz` 是 watch 文件 regex 把 tarball 文件名后缀粘进了版本号（`SELECT watch_file FROM upstream WHERE source='libgltf' AND release='sid'` 可眼见为实）。uscan 一比对"0.1.0.gz 比 0.1.0 新"→ 误报诈尸。
+UDD 显示 upstream_version = **`0.1.0.gz`**——版本号里带 `.gz` 是 watch 文件 regex 把 tarball 文件名后缀粘进了版本号（`SELECT watch_file FROM upstream WHERE source='libgltf' AND release='sid'` 可直接复核）。uscan 一比对"0.1.0.gz 比 0.1.0 新"→ 误报诈尸。
 
 **规则**：版本号出现 `.gz/.tgz/.zip` 等后缀、或与已知版本模式不符 → 标记为 watch 假阳性，剔除告警。真实信号长这样：`xtermcontrol 3.8→3.11`、`aspell-ga 0.50→4.5`。
 
 ## 6. 为什么八年没人埋（auto-decrufter 射程外）
 
-DAK 的 auto-decrufter 只埋"构建关系断裂"的包（NBS/NVIU）。libgltf 源码至今健康地构建出二进制——它是"活着但无用"，不在机器人射程内，**必须人工 RM**。这正是 spring 的价值：检测"待埋候选"→ 提示人发 RM。
+DAK 的 auto-decrufter 只埋"构建关系断裂"的包（NBS/NVIU）。libgltf 源码至今健康地构建出二进制——它是"活着但无用"，不在机器人射程内，**必须人工 RM**。这正是 Gleam 的价值：检测"待埋候选"→ 提示人发 RM。
 
-该埋三条件（全中，实测）：
+该埋三条件（libgltf 全中）：
 1. 零 build-rdep：`SELECT ... WHERE build_depends ILIKE '%libgltf%'` → 0 行
 2. 零运行时 rdep：只有 libgltf-dev → libgltf-0.1-1 自引用（多架构重复 8 行）
 3. 上游官方判死：作者 2017 弃坑信 + 唯一下游（LibreOffice）已移除 3D 功能 + popcon≈0
@@ -67,7 +67,7 @@ DAK 的 auto-decrufter 只埋"构建关系断裂"的包（NBS/NVIU）。libgltf 
 
 删包 ≠ 焚书。libgltf 的历史现存于：
 
-| 层 | 证据（实测 2026-10-28） |
+| 层 | 证据（2026-10-28 时点） |
 |---|---|
 | 上游 git | copyright 里的 gerrit 死链实为 301 → `https://git.libreoffice.org/libgltf/`（200，代码本体还在 TDA 服务器） |
 | Software Heritage | origin 搜索：`deb://Debian/packages/libgltf` **358 次访问**（最后 2026-04-30）+ Ubuntu/PLD/solus 打包史各若干 |
@@ -75,7 +75,7 @@ DAK 的 auto-decrufter 只埋"构建关系断裂"的包（NBS/NVIU）。libgltf 
 | archive.debian.org | bullseye/bookworm/trixie 冻结副本跟发行版活到 EOL 后永久保存 |
 | 数据层 | UDD 12 次上传记录、O: #889677、popcon 12 年日粒度曲线（`qa.debian.org/cgi-bin/popcon-data`）、弃坑信在邮件列表归档 |
 
-**哲学**：代码永生，死的是人对它的兴趣。spring 盯的不是尸体在哪，而是"谁开始挖了"——SWH 每次重访问做快照 diff，本身就是免费的"有人动过"传感器。
+**哲学**：代码永生，死的是人对它的兴趣。Gleam 盯的不是尸体在哪，而是"谁开始挖了"——SWH 每次重访问做快照 diff，本身就是免费的"有人动过"传感器。
 
 ## 8. popcon 曲线解读（搭车者 vs 真实兴趣）
 
@@ -84,7 +84,7 @@ DAK 的 auto-decrufter 只埋"构建关系断裂"的包（NBS/NVIU）。libgltf 
 
 结论：判断"诈尸后的接养价值"，popcon 时间序列是最强旁证——一条 12 年曲线能证明这个包**从来没被人类需要过**。
 
-## 9. 附：埋葬模板（待执行）
+## 9. 附：埋葬工单模板
 
 ```
 To: submit@bugs.debian.org

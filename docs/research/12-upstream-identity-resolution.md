@@ -1,16 +1,16 @@
 # 12 上游身份解析：候选方法与证据循环（研究归档 / 未选型）
 
 **归档日期**：2026-10-31
-**性质**：方法记录，不是选型决定。应用户要求存档本轮算法调研；本文不选定、不实现任何算法，不含实现日期与性能承诺。不得把本文当作已接受设计引用（已接受范围仅 06，见 [11](11-decisions-and-open-questions.md) §1）。
-**关联**：[06](06-framework-overview.md) §2 分层模型、[07](07-package-identity-taxonomy.md) 轴 C/D、[09](09-discovery-probes-and-ai.md) §1 发现管道、[11](11-decisions-and-open-questions.md) §5；81 包压测见 [05](05-survey-findings.md) 与 [survey/2026-10-29/](survey/2026-10-29/)。
+**性质**：方法记录，不是选型决定。本文调研上游身份解析的候选方法，不选定、不实现任何算法，不含实现日期与性能承诺。不得把本文当作已接受设计引用（已接受范围见 [11](11-decisions-and-open-questions.md) 的选型记录）。
+**关联**：[06](06-framework-overview.md) 分层模型、[07](07-package-identity-taxonomy.md) 身份分类轴 C/D、[09](09-discovery-probes-and-ai.md) 发现管道、[11](11-decisions-and-open-questions.md) 研究缺口；81 包压测见 [05](05-survey-findings.md)。
 
 ## 1. 范围与状态（先读）
 
-- 记录 ≠ 选型：用户要求的是记录，不是选定或实现算法。所有方法均为未测试提案。
-- 范围方向：全档案（archive-wide）上游发现与身份解析是用户提出的新方向；QA 监控仍是主线优先级。监控套件清单与历史枚举仍未定，现有 QA 快照的范围与口径不变。
+- 记录 ≠ 选型：本文是记录，不是选定或实现算法。所有方法均为未测试提案。
+- 范围方向：全档案（archive-wide）上游发现与身份解析是新增方向；QA 监控仍是主线优先级。监控套件清单与历史枚举仍未定，现有 QA 快照的范围与口径不变。
 - 两个不同的问题，不互相替代：
   - **上游身份记录去重**：同一上游实体在多条线索下被拆成多条记录，要不要合并成一条。
-  - **source package → 上游实体指派**：一个包聚合多个上游、多个包共享一个上游的多对多关系（07 轴 C）。前者不解决后者；后者还需要逐包证据，不是去重的副产品。
+  - **source package → 上游实体指派**：一个包聚合多个上游、多个包共享一个上游的多对多关系（[07](07-package-identity-taxonomy.md) 轴 C）。前者不解决后者；后者还需要逐包证据，不是去重的副产品。
 
 ## 2. 证据循环（候选假设的生成与撤销）
 
@@ -20,7 +20,7 @@
 
 ## 3. 候选方法（全部为未测试提案）
 
-会话综合方向（未选型、未验证）：概率匹配 + 冲突约束 + 增量修正；不是"名字相似就合并"。
+综合方向（未选型、未验证）：概率匹配 + 冲突约束 + 增量修正；不是"名字相似就合并"。
 
 ### a. 多轮阻断 + Fellegi-Sunter 概率打分
 
@@ -45,18 +45,18 @@
 ## 4. 相似度边的纪律（为什么不做传递闭包）
 
 - 假想案例：A~B 相似、B~C 相似，但 A≠C 已被验证。对相似度边做传递闭包会把 A、C 假合并；相似度边不是等价关系，闭包只适用于已验证的同一性陈述。
-- 以下各项单独都不足以证明同一上游：同 org、同 URL、同 host、同 repo、共享内容 hash、fork 关系、monorepo 成员关系（07 轴 C/D 与 08 §3 的既有保留继续适用）。
+- 以下各项单独都不足以证明同一上游：同 org、同 URL、同 host、同 repo、共享内容 hash、fork 关系、monorepo 成员关系（[07](07-package-identity-taxonomy.md) 轴 C/D 与 [08](08-related-tools-and-models.md) 的既有保留继续适用）。
 - 反向同理：Debian 源码包名不同、release track 不同，都不证明上游实体不同。
-- 修正历史时保留实体身份与原始观测：合并、拆分是主张层的修订，旧观测不删不改（06 §2 L3 的追加纪律）。
+- 修正历史时保留实体身份与原始观测：合并、拆分是主张层的修订，旧观测不删不改（[06](06-framework-overview.md) 分层模型中主张层的追加纪律）。
 - 签名只证明它所附的具体陈述，不构成对整个项目身份的背书。
 
 ## 5. 评估与数据（未建立，仅有方向）
 
-- 缺标注集：需经独立复核的正例对 + 困难反例 + 未决/多上游案例。现有 81 包压测只是临时种子（provisional，见 05 编者注）；watch / DEP-12 / 外部映射本身不是金标。
+- 缺标注集：需经独立复核的正例对 + 困难反例 + 未决/多上游案例。现有 81 包压测只是临时种子（provisional，见 [05](05-survey-findings.md) 的编者注）；watch / DEP-12 / 外部映射本身不是金标。
 - 候选指标方向：候选召回、假合并及其传播影响、漏配、人工审查负担、反证后成功拆分的数量、增量与全量重算的一致性与成本。
 - 数值阈值一概未定；本文不做性能声明，不引用不存在的全局基准。
 
-## 6. 来源（2026-10-31 会话中记录，归档日未重新独立核验）
+## 6. 来源
 
 - [Fellegi-Sunter 理论（Splink topic guide）](https://moj-analytical-services.github.io/splink/topic_guides/theory/fellegi_sunter.html)
 - [阻断规则（Splink topic guide）](https://moj-analytical-services.github.io/splink/topic_guides/blocking/blocking_rules.html)

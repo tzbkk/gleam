@@ -1,11 +1,10 @@
 # QA 包鉴定压测:状态机覆盖度与特例清单
 
 **日期**:2026-10-29
-**方法**:分层抽样 81 包(watch 状态 × 结构性嫌疑),6 个并行鉴定 agent 深挖,每包含本地 UDD 快照(raw/)+ 网络探针(GH atom feeds / SWH / Repology / SF JSON / 目录 mtime)
-**原始材料**:[survey/2026-10-29/](survey/2026-10-29/)(协议、6 份分批结果、样本清单)
-**状态**:证据初步,个体判定为先前 agent 临时评估、未独立复核;分类与状态语义开放(见 [06](06-framework-overview.md) §6、[11](11-decisions-and-open-questions.md))。状态机如何吸收这些发现,待商榷(见 §7)
+**方法**:分层抽样 81 包(watch 状态 × 结构性嫌疑),6 个并行鉴定 agent 深挖,每包对照 UDD 快照并做网络探针(GH atom feeds / SWH / Repology / SF JSON / 目录 mtime)
+**状态**:证据初步,个体判定为先前 agent 临时评估、未独立复核;分类与状态语义开放(见 [06](06-framework-overview.md)、[11](11-decisions-and-open-questions.md))。状态机如何吸收这些发现,待商榷(见第 7 节)
 
-> **编者注(2026-10-31)**:本文件为历史解读存档,正文保留原样。几点口径修正:逐包判定含 agent 标签与未核实计数,不是金标准;根节点问题现按 06 以身份表述;"6/16 隐性失明"是所选样本层的比率,不是总体盲区率;"newer available"是差分信号,不等于复活信号;§5"0 例真回滚"与 bwbar 工件被删的实例相冲突,不作为普遍结论;任何样本都不能证明状态集完备。项目现名 Gleam / 荧。
+> **编者注(2026-10-31)**:本文件为历史解读。几点口径修正:逐包判定含 agent 标签与未核实计数,不是金标准;根节点问题现按 [06](06-framework-overview.md) 以身份表述;"6/16 隐性失明"是所选样本层的比率,不是总体盲区率;"newer available"是差分信号,不等于复活信号;第 5 节"0 例真回滚"与 bwbar 工件被删的实例相冲突,不作为普遍结论;任何样本都不能证明状态集完备。项目现名 Gleam / 荧。
 
 ## 1. 样本设计
 
@@ -18,7 +17,7 @@
 | E_weird | only older / untrackable | 12 | 版本语义怪胎 |
 | F_structural | native 版本号/词典/数据嫌疑 | 15 | 攻击实体轴 |
 
-固定随机种子 20261029,样本清单见 sample.json。成本事实:**六批合计 GH API 仅用 4 次配额**,全部决定性证据来自 atom feeds、目录 mtime、SF best_release.json、SWH、Repology——廉价探针足够,监控架构成本预估成立。
+固定随机种子 20261029。成本事实:**六批合计 GH API 仅用 4 次配额**,全部决定性证据来自 atom feeds、目录 mtime、SF best_release.json、SWH、Repology——廉价探针足够,监控架构成本预估成立。
 
 ## 2. 状态覆盖对账
 
@@ -121,7 +120,7 @@ F 批 15 包中 8 个 native(3.0 native 格式),且**不是一个案例,是四�
 
 ## 5. 数字侧写
 
-- C 批("up to date"):**6/16 打破假设**(2 假 watch、2 commit 活、2 健康误入)→ 隐性失明率实测 ≈ 37.5%(该层)
+- C 批("up to date"):**6/16 打破假设**(2 假 watch、2 commit 活、2 健康误入)→ 该层隐性失明率 ≈ 37.5%
 - D 批("newer"):8 真复活 / 3 落后 / 2 考古 / 1 博物馆 → **"newer available" 是差分信号,不是复活信号**
 - E 批("only older"):11 例中 **0 例真回滚**,约一半是 Debian 侧版本串伪影,2 例WATCH_BLIND 掩盖了真实 "newer"
 - B 批("null"):四种不同含义(无文件/未处理/不可 watch/自指元数据)
@@ -143,11 +142,11 @@ F 批 15 包中 8 个 native(3.0 native 格式),且**不是一个案例,是四�
 以下每条都列出证据与至少两个候选方案,**均未拍板**:
 
 **Q1 信道盲区怎么进状态机?**
-(A) 新增状态 ACTIVE-UNTAGGED(release 冻结/commit 活);(B) 不加状态,给所有状态挂正交属性 `commit_recency`,由独立轴表达。证据:§3.1 四例 + E 批三例打破。
+(A) 新增状态 ACTIVE-UNTAGGED(release 冻结/commit 活);(B) 不加状态,给所有状态挂正交属性 `commit_recency`,由独立轴表达。证据:第 3.1 节四例 + E 批三例打破。
 牵连:REVIVED 定义是否要求"版本事件"?syncevolution 按"commit 也算"应为 REVIVED,按版本应为 DORMANT——**优先级规则(信道孰先)本身就是要商榷的对象**。
 
 **Q2 NATIVE 族是终态 bypass 还是独立管道?**
-(A) 实体类型判定 → NATIVE_ACTIVE/NATIVE_QUARRY 终态,抑制上游监控;(B) 完全独立的 Debian 侧管道(监控 salsa/uploads),上游状态机对 native 一票否决。证据:§3.5 四物种;31 个 native 包全量待归类。
+(A) 实体类型判定 → NATIVE_ACTIVE/NATIVE_QUARRY 终态,抑制上游监控;(B) 完全独立的 Debian 侧管道(监控 salsa/uploads),上游状态机对 native 一票否决。证据:第 3.5 节四物种;31 个 native 包全量待归类。
 
 **Q3 WATCH_BLIND 与 NOISE 的边界?**
 NOISE 语义是"忽略",WATCH_BLIND 语义是"重扫"。二者都产生假 uscan 字面值,但动作相反。合并进一个"字面值无效"态 + 成因子字段,还是分开?
@@ -169,6 +168,6 @@ wcd/wizznic 证明 DEP-12 Repository 常比 watch URL 新。位置候选的优�
 
 ## 8. 与既有文档的关系
 
-- 01 §7 推荐架构的"补盲层"升级为**认证层**(全部 covered-quiet 包的周期性外部重扫),不再是 37% 盲区的专属补偿——wizznic/bandwidthd 对照实验(cdist blobandconquer)的结论被 81 包压测放大
-- 02 §7 "该埋 vs 等诈尸"三条件不变;UNTRACEABLE/NATIVE_QUARRY 族成为"该埋"管道的高置信输入
-- 03 libgltf 的 NOISE(.gz 粘连)是真实但**罕见**的形态——特例目录 §3.3/§3.4 的沉默形状与归属形状噪声更常见
+- [01](01-upstream-activity-tools.md) 架构草案的"补盲层"升级为**认证层**(全部 covered-quiet 包的周期性外部重扫),不再是 37% 盲区的专属补偿——wizznic 型假覆盖的教训被 81 包压测进一步放大
+- [02](02-udd-handbook.md) 的"该埋 vs 等诈尸"三条件不变;UNTRACEABLE/NATIVE_QUARRY 族成为"该埋"管道的高置信输入
+- [03](03-libgltf-case-study.md) 的 NOISE(.gz 粘连)是真实但**罕见**的形态——本文第 3.3/3.4 节的沉默形状与归属形状噪声更常见

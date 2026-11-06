@@ -1,7 +1,7 @@
 # Gleam / 荧 框架概览：以证据为中心的上游身份知识库
 
 **状态**：框架方向已接受；活动状态、TTL、阈值与告警语义仍待商议。
-**依据**：[81 包鉴定压测](05-survey-findings.md)、[工具与数据模型调查](01-upstream-activity-tools.md)及本地 UDD 快照。
+**依据**：[81 包鉴定压测](05-survey-findings.md)、[工具与数据模型调查](01-upstream-activity-tools.md)。
 
 ## 1. 定位
 
@@ -55,7 +55,7 @@ Debian source package 是系统入口。登记其 source 名称、版本、格�
 
 这些候选不是已经完备、互斥的最终枚举。包可以有一个主要分类并同时带多个标签或关系。例如 `freecdb` 可以是 Debian native、quarry 且聚合多个来源；不能把这些事实强压成同一个互斥类型。标签需与状态分离，例如 `DEBIAN_ASSIGNED_VERSION`、`RELEASELESS`、`FUNCTIONALLY_OBSOLETE`、`PAPER_ORPHAN`。
 
-打包格式 native 不自动豁免监控，也不创设新终态；是否走独立的 Debian 内部监控路径属未决状态语义（§6）。
+打包格式 native 不自动豁免监控，也不创设新终态；是否走独立的 Debian 内部监控路径属未决状态语义（见下文"明确未定事项"）。
 
 ### L2 — 上游实体与端点
 
@@ -195,11 +195,10 @@ action
 
 ## 7. 与既有研究文档的关系
 
-- [01-upstream-activity-tools.md](01-upstream-activity-tools.md)：活动工具调研（历史）；其中 §7 的状态机式骨架是调研阶段方案，不是当前已接受的框架定义。
+- [01-upstream-activity-tools.md](01-upstream-activity-tools.md)：活动工具调研（历史）；其中的状态机式骨架是调研阶段方案，不是当前已接受的框架定义。
 - [07-package-identity-taxonomy.md](07-package-identity-taxonomy.md)：包身份分类的轴、标签与计数保留（本页 L1 的展开）。
 - [08-related-tools-and-models.md](08-related-tools-and-models.md)：身份数据模型的横向参考、schema 支持与关键修正。
-- [09-discovery-probes-and-ai.md](09-discovery-probes-and-ai.md)：证据获取分层、探针边界与 AI 分诊提案（本页 §3 的展开）。
+- [09-discovery-probes-and-ai.md](09-discovery-probes-and-ai.md)：证据获取分层、探针边界与 AI 分诊提案（本页"证据获取与权限边界"的展开）。
 - [10-debian-community-practices.md](10-debian-community-practices.md)：Debian 社区侧实践与联络边界。
 - [11-decisions-and-open-questions.md](11-decisions-and-open-questions.md)：已接受决定、提案与未决清单。
 - [05-survey-findings.md](05-survey-findings.md)：81 包压测证据及待商榷的状态机问题（历史解读，见其编者注）。
-- [survey/2026-10-29/](survey/2026-10-29/)：分批鉴定结果、协议和样本原始材料。

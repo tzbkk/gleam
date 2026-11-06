@@ -1,8 +1,8 @@
 # 15 Jev 决策模型调研归档（provisional，未采纳）
 
 **归档日期**：2026-11-01
-**性质**：用户"先记下来"指令的存档。provisional 研究，不是接受决定：未采纳、未付费推理、未在 Gleam 数据上评估（已接受范围见 [11](11-decisions-and-open-questions.md) §1）。
-**关联**：[11](11-decisions-and-open-questions.md) §5 提案、§7 研究缺口；[09](09-discovery-probes-and-ai.md) §5 AI 边界；[experiments/2026-11-01-librcd-discovery/TRACE.md](experiments/2026-11-01-librcd-discovery/TRACE.md)。
+**性质**：调研存档。provisional 研究，不是接受决定：未采纳、未付费推理、未在 Gleam 数据上评估（已接受范围见 [11](11-decisions-and-open-questions.md) 的选型记录）。
+**关联**：[11](11-decisions-and-open-questions.md) 提案与研究缺口；[09](09-discovery-probes-and-ai.md) AI 边界。
 
 ## 1. 动机与范围
 
@@ -19,7 +19,7 @@
 - 能力边界：不能自行发明任意搜索查询、URL 或工具参数；候选与动作必须由代码或其他模型提供。
 - 上下文：默认 64k/请求、32k/问题；长上下文可选 262k，单价相同，官方文档称更慢、更不准；英语效果最强。
 - 交付形态：仅托管 API，无经验证的自托管权重。
-- 模型输出与自报校准不构成事实或身份证明（与 09 §5 的 AI 边界一致）。
+- 模型输出与自报校准不构成事实或身份证明（与 [09](09-discovery-probes-and-ai.md) 的 AI 边界一致）。
 
 ## 3. 独立预印本（非上游口径）
 
@@ -40,7 +40,7 @@
 | 10,000 | 0.45276 | 13.5828 |
 
 - 情景不含：搜索、抓取、重试、升级调用与 QA 本身；也无与 GLM 多轮的同任务对比。
-- 参照（可选）：librcd 单包全量调查为 GLM-5.3-Flash，11 轮、18 次远程调用，API 等价算术 0.029623 至 0.033389 USD。实际 coding plan 计费未知；这不是实测的 Jev 节省。实验记录见文首链接。
+- 参照（可选）：librcd 单包全量调查为 GLM-5.3-Flash，11 轮、18 次远程调用，API 等价算术 0.029623 至 0.033389 USD。实际 coding plan 计费未知；这不是实测的 Jev 节省。
 
 ## 5. 分诊提案（未接受，待讨论）
 

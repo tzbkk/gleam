@@ -1,6 +1,6 @@
 # UDD 实战手册（Ultimate Debian Database）
 
-**验证日期**：2026-10-27 ~ 2026-10-29（所有连接方式、SQL、数据均本机实测）
+**验证日期**：2026-10-27 ~ 2026-10-29
 
 ## 1. 连接方式
 
@@ -32,7 +32,7 @@ alias udd="psql postgresql://udd-mirror:udd-mirror@udd-mirror.debian.net/udd"
 
 **大坑**：`GROUP BY 1,2,3` / `ORDER BY 4` 列号引用在 SELECT 列表变化后必碎（`not in select list`）——脚本里永远用真实列名。
 
-## 3. Gleam 核心表（schema 实测确认，spring 时期采集）
+## 3. Gleam 核心表（schema 经实测确认）
 
 | 表 | 关键列 | 用途 |
 |---|---|---|
@@ -49,15 +49,15 @@ alias udd="psql postgresql://udd-mirror:udd-mirror@udd-mirror.debian.net/udd"
 | `bugs` / `archived_bugs` / `bugs_usertags` | id, arrival, last_modified, done, title | RM 工单生命周期 |
 | `package_removal_batch` + `package_removal` | time, ftpmaster, distribution, requestor, reasons | 移除记录 |
 
-## 4. 诈尸 SQL（已验证跑通）
+## 4. 诈尸 SQL
 
 ```sql
--- ① QA 孤儿包清单（实测 ~1,075）
+-- ① QA 孤儿包清单（~1,075，2026-10-28）
 SELECT count(*) FROM sources
 WHERE maintainer = 'Debian QA Group <packages@qa.debian.org>'
   AND release = 'sid';
 
--- ② 上游 watch 状态分布（实测 2026-10-28：520/210/187/120/38/7）
+-- ② 上游 watch 状态分布（2026-10-28：520/210/187/120/38/7）
 SELECT u.status, count(*)
 FROM upstream u
 JOIN sources s ON s.source = u.source AND s.release = 'sid'
@@ -76,7 +76,7 @@ WHERE s.maintainer = 'Debian QA Group <packages@qa.debian.org>'
 GROUP BY u.source, s.version, u.upstream_version, p.recent
 HAVING max(uh.date) < now() - interval '3 years'
 ORDER BY max(uh.date);
--- 实测结果（2026-10-28）：libgltf(2018), aspell-ga, ooo-thumbnailer,
+-- 查询结果（2026-10-28）：libgltf(2018), aspell-ga, ooo-thumbnailer,
 -- herculesstudio, xtermcontrol 3.8→3.11, kytos-utils, dbtoepub, guilt, jtb
 
 -- ④ 谁还在 build-depends / depends 某包（判"该埋"用）
@@ -87,12 +87,12 @@ SELECT package, depends FROM packages
   WHERE release='sid' AND depends ILIKE '%libgltf%';
 ```
 
-**popcon 三大坑**（实测踩过）：
+**popcon 三大坑**：
 1. `sources.bin` 是逗号分隔文本（`'libots-dev, libots0, ots'`），**不能当外键 JOIN popcon**——多二进制包会被 INNER JOIN 无声吞掉（libgltf 就这么消失过）。用 `popcon_src` 直接按 source 关联
 2. 允许缺失的场景用 `LEFT JOIN`（冷门包可能不在 popcon_src 里）
 3. `packages` 表每架构一行，同名重复是正常的
 
-## 5. 上游仓库分布（实测）
+## 5. 上游仓库分布（2026-10-28 时点）
 
 QA 孤儿包的上游住在哪（决定 commit 级监控用什么工具）：
 
@@ -116,14 +116,14 @@ https://qa.debian.org/cgi-bin/popcon-data?packages=A+B;from_date=YYYY-MM-DD;to_d
 
 > **编者注（2026-10-31）**：以下三条件是调研期启发式，未被采纳为 Gleam 的自动移除规则；Gleam 不自动发起 RM，建议的移除经人工复核后由人执行（Debian 侧另有其自身的自动移除机制；见 [04](04-debian-removal-process.md)、[11](11-decisions-and-open-questions.md)）。
 
-三条件全中 → 该埋（发 RM，见 04 文档）：
+三条件全中 → 该埋（发 RM，见 [04](04-debian-removal-process.md)）：
 1. 零 build-rdep（④ 第一条查询空）
 2. 零运行时 rdep（④ 第二条只有自引用）
 3. 上游官方判死（作者弃坑声明 / 仓库钉死 / 唯一下游已弃用）
 
 否则 → 等诈尸（进监控名单）。
 
-## 8. 练习（ CLI 教学遗留，附答案口径）
+## 8. 练习（常见口径变体）
 
 1. 沉寂阈值 3→5 年：只改 `interval '5 years'`
 2. watch 指向 GitHub 的孤儿包：`upstream.watch_file ILIKE '%github.com%'`（≈281）

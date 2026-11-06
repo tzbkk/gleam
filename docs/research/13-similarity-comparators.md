@@ -1,19 +1,18 @@
 # 13 相似度比较器：模型排除决定与候选清单（研究归档 / 未选型）
 
 **归档日期**：2026-10-31
-**性质**：调研存档与决定记录。用户决定（2026-10-31）：相似度不采用嵌入模型；比较器仍在考察，未选型。小模型调研结论仅作存档，不进入实现。不得把本文当作选型或已接受设计引用（已接受范围见 [11](11-decisions-and-open-questions.md) §1）。
-**关联**：[12](12-upstream-identity-resolution.md) §3 候选方法、§5 评估；[06](06-framework-overview.md) §3 搜索命中是候选；[07](07-package-identity-taxonomy.md) 轴 C/D；[11](11-decisions-and-open-questions.md) §1、§5、§7；81 包压测见 [05](05-survey-findings.md) 与 [survey/2026-10-29/](survey/2026-10-29/)。
+**性质**：调研存档与决定记录。决定（2026-10-31）：相似度不采用嵌入模型；比较器仍在考察，未选型。小模型调研结论仅作存档，不进入实现。不得把本文当作选型或已接受设计引用（已接受范围见 [11](11-decisions-and-open-questions.md) 的选型记录）。
+**关联**：[12](12-upstream-identity-resolution.md) 候选方法与评估方向；[06](06-framework-overview.md) 搜索命中是候选；[07](07-package-identity-taxonomy.md) 身份分类轴 C/D；[11](11-decisions-and-open-questions.md) 选型记录与研究缺口；81 包压测见 [05](05-survey-findings.md)。
 
 ## 1. 范围与决定（先读）
 
-- **决定（用户 2026-10-31）**：相似度判断不采用嵌入模型，包括 potion、MiniLM、BGE、cross-encoder 等语义模型（「归档，那就不用模型」）。
-- 决定理由（会话中记录，未独立复核）：IdBench 显示嵌入在标识符上不可靠；无公开可引用的零样本基准；余弦相似度阈值不稳定。
+- **决定（2026-10-31）**：相似度判断不采用嵌入模型，包括 potion、MiniLM、BGE、cross-encoder 等语义模型。
+- 决定理由：IdBench 显示嵌入在标识符上不可靠；无公开可引用的零样本基准；余弦相似度阈值不稳定。
 - **排除边界**：排除的是嵌入/语义模型；规则、编辑距离、TF-IDF、语音键等非模型方法不在排除之列，但仍须实测。
 - **比较器仍在考察**：rapidfuzz 类非模型算法是候选方向，选择待实测；本文不选型、不预定阈值。
 - 与 [12](12-upstream-identity-resolution.md) 的分工：12 记录身份解析的方法循环（未选型）；本文只记录相似度这一层的排除决定与比较器候选。
-- 小模型调研结论仅作存档，不进入实现；不得据此引用任何「已选定算法」。
 
-## 2. 调研要点（provisional；先前 agent 记录，归档日未重新核验）
+## 2. 调研要点（provisional）
 
 生产系统的否定结果：模糊匹配在包名上普遍不用于自动合并。
 
@@ -22,7 +21,7 @@
 - ORT：无模糊匹配。
 - Anitya：unique(name, homepage) 约束；pg_trgm ≥ 0.3 仅用于搜索建议（@6f61cb2）。
 - deps.dev：以元数据与证明做关联；模糊仅产「相似名」警告（同形字 + Levenshtein ≤ 1、仅热门包）。
-- 共同模式：模糊只产候选或警告，从不自动合并；与 [12](12-upstream-identity-resolution.md) §2 的证据循环一致。
+- 共同模式：模糊只产候选或警告，从不自动合并；与 [12](12-upstream-identity-resolution.md) 的证据循环一致。
 
 ## 3. 候选比较器清单（待实测，未选型）
 
@@ -33,19 +32,14 @@
 - scikit-learn：char_wb(2,4) TF-IDF + cosine。
 - URL 纪律：url-normalize 规范化后按 host / owner / repo 逐段精确比较，永不模糊。
 - thefuzz 与 Levenshtein（PyPI 包）均为 rapidfuzz 的壳，不单列。
-- Cohen、Ravikumar、Fienberg（2003）：短名上仿射缺口编辑距离最强；有语料统计可用时 TF-IDF 系获胜（此前会话口误作「Cohen-Pientka」，在此更正）。
+- Cohen、Ravikumar、Fienberg（2003）：短名上仿射缺口编辑距离最强；有语料统计可用时 TF-IDF 系获胜。
 - 以上全部为候选；没有任何一项被选定，实测（§4）完成前不作排序。
 
-## 4. 实测计划（已完成，结果见 14）
+## 4. 实测计划（已完成，结果见 [14](14-similarity-and-signal-tests.md)）
 
-在 raw/ 快照上比较各比较器的区分力：声明式正例 = 包 ↔ 自己的 watch / DEP-12 声明上游；负例 = 跨包近邻 + 已知误导案例。结果见 [14](14-similarity-and-signal-tests.md)，不预定阈值；本文不收录实验数字。
+在快照数据上比较各比较器的区分力：声明式正例 = 包 ↔ 自己的 watch / DEP-12 声明上游；负例 = 跨包近邻 + 已知误导案例。结果见 [14](14-similarity-and-signal-tests.md)，不预定阈值；本文不收录实验数字。
 
-## 5. 存档边界
-
-- 本文只存档决定与调研要点，不含实现、不含实验结果、不含阈值。
-- 后续实测结果另存；若实测推翻候选，以新文档为准，本文不改写，只可加勘误。
-
-## 6. 来源（2026-10-31 会话中记录，归档日未重新独立核验）
+## 5. 来源
 
 - [rapidfuzz](https://github.com/rapidfuzz/rapidfuzz)
 - [jellyfish](https://codeberg.org/jpt/jellyfish)

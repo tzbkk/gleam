@@ -3,7 +3,7 @@
 **调研日期**：2026-10-27 ~ 2026-10-29
 **问题**：追踪 Debian 孤儿包（QA 维护）上游作者活动状态，尤其是"死了很久突然诈尸"
 
-> **编者注（2026-10-31）**：本文件是历史调研存档，不是当前运行保证。§1"专用工具不存在"是有界审阅结果，边界与修正见 [08](08-related-tools-and-models.md)、[10](10-debian-community-practices.md)，对集成方式的断言以这两份为准；§6 的"≥2 个信号才触发"等固定阈值是调研期提案，未被接受为政策；§7 为历史草案，保留原样。项目现名 Gleam / 荧。
+> **编者注（2026-10-31）**：本文件是历史调研存档，不是当前运行保证。第 1 节"专用工具不存在"是有界审阅结果，边界与修正见 [08](08-related-tools-and-models.md)、[10](10-debian-community-practices.md)，对集成方式的断言以这两份为准；第 6 节的"≥2 个信号才触发"等固定阈值是调研期提案，未被接受为政策；第 7 节为历史草案。项目现名 Gleam / 荧。
 
 ## 1. 结论：专用工具不存在
 
@@ -13,24 +13,24 @@
 - unix.SE 同款问题（#549318 "list of packages with dead parent project"）长期无人能答，最佳答案："UDD 的 JSON 已经是自动化极限"
 - Fedora 2024-02 讨论 "Watching the health of upstream projects" 至今没选出工具；ELN issue #246 还在求基础孤儿告警
 - GitHub/salsa 代码与仓库名搜索（zombie/dead upstream/orphan watcher/necromancer/revival 等）零命中
-- 学术圈研究诈尸（见 §6）但没有产出可部署工具
+- 学术圈研究诈尸（见第 6 节）但没有产出可部署工具
 
 **推论：必须自组，但积木齐全。**
 
 ## 2. 先回答：uscan 不是已经知道新版本了吗？
 
-uscan 数据确实全库采集（UDD `upstream` 表，每 30 分钟刷新），但针对 QA 孤儿包有三个致命缺陷（实测数据，2026-10-28）：
+uscan 数据确实全库采集（UDD `upstream` 表，每 30 分钟刷新），但针对 QA 孤儿包有三个致命缺陷（2026-10-28 数据）：
 
 1. **~37% 完全看不见**：1,074 个 QA 包中，watch 报错 185 + 无任何 watch 数据 210 + untrackable 7。孤儿包的 watch 文件经常指向已搬家/死掉的站点
 2. **只看发版**：commit 级复活（诈尸的前奏）完全不可见
 3. **"知道"≠"通知"**：数据静静躺在 UDD/tracker 网页里，没有任何东西对"沉寂数年→突然有新版"做主动告警
 
-## 3. Debian 官方设施（全部验证）
+## 3. Debian 官方设施
 
 | 设施 | 上游相关能力 | 关键细节 |
 |---|---|---|
-| **tracker.debian.org** | 每包页面 "A new upstream version is available" 面板（来自 uscan）+ 孤儿状态 | **RSS 可靠**（`/pkg/<pkg>/rss` 实测携带上游新版本条目）；**邮件订阅不可靠**（官方文档明说新版本通知"尚未实现"）。订阅：`control@tracker.debian.org` 发 `subscribe <pkg>` |
-| **UDD** | `upstream` 表（status/upstream_version/last_check，30 分钟刷新） | SQL 直连见 02 手册。DMD：`udd.debian.org/dmd/?packages@qa.debian.org` |
+| **tracker.debian.org** | 每包页面 "A new upstream version is available" 面板（来自 uscan）+ 孤儿状态 | **RSS 可靠**（`/pkg/<pkg>/rss` 携带上游新版本条目）；**邮件订阅不可靠**（官方文档明说新版本通知"尚未实现"）。订阅：`control@tracker.debian.org` 发 `subscribe <pkg>` |
+| **UDD** | `upstream` 表（status/upstream_version/last_check，30 分钟刷新） | SQL 直连见 [02](02-udd-handbook.md)。DMD：`udd.debian.org/dmd/?packages@qa.debian.org` |
 | **upstream-status JSON** | `https://udd.debian.org/cgi-bin/upstream-status.json.cgi` | 免认证，39,530 条，~12.7MB，快照式（自己做 diff） |
 | **qa.debian.org/cgi-bin/watch?pkg=X** | 单包 uscan 按需跑 | |
 | WNPP | O:/RFA:/RFH: 工单（UDD `wnpp` 表：O 1,094 / RFA 98 / RFH 48） | wnpp.debian.net 可按 "Dust"（无动静天数）排序，社区维护（hartwork），活跃 |
@@ -44,14 +44,14 @@ uscan 数据确实全库采集（UDD `upstream` 表，每 30 分钟刷新），�
 
 | 服务 | 能力 | 诈尸相关用法 |
 |---|---|---|
-| **Anitya / release-monitoring.org** | 297,774 项目、32 种 backend（github/gitlab/cgit/sourceforge/gnu/任意 regex 页面）；`/api/v2/packages/?distribution=Debian` 有 **752 个 Debian 映射**（实测）；`/api/v2/versions/?project_id=N` 返回每版本 `created_on` | **唯一的免费 push 通道**：匿名 MQTT `mqtt.fedoraproject.org` 订阅主题 `anitya.project.version.update.v2`，消息体自带 `packages[]`，过滤 `distribution=="Debian"`。缺的项目可 `POST /api/v2/projects/` 注册。注意 created_on 是 Anitya 首见时间 |
+| **Anitya / release-monitoring.org** | 297,774 项目、32 种 backend（github/gitlab/cgit/sourceforge/gnu/任意 regex 页面）；`/api/v2/packages/?distribution=Debian` 有 **752 个 Debian 映射**；`/api/v2/versions/?project_id=N` 返回每版本 `created_on` | **唯一的免费 push 通道**：匿名 MQTT `mqtt.fedoraproject.org` 订阅主题 `anitya.project.version.update.v2`，消息体自带 `packages[]`，过滤 `distribution=="Debian"`。缺的项目可 `POST /api/v2/projects/` 注册。注意 created_on 是 Anitya 首见时间 |
 | **Repology** | 跨 ~270 仓库家族的版本对比；API 无任何日期字段 | 诈尸旁证：`/api/v1/projects/?inrepo=debian_stable&outdated=1&families_newest=25` = "别的发行版都有新版就 Debian 没有"。限 1 rps，批量用 dumps.repology.org |
 | **Software Heritage** | `/api/1/origin/<url>/visits/`（**URL 传裸的，别 percent-encode**）返回 {date, status, snapshot} 序列 | **快照 ID diff = 复活检测**：同 snapshot=沉寂，变了=有动静；`status:"not_found"` 还能发现上游消失。平均数天~两周重爬；`POST /api/1/origin/save/...` 可主动触发 |
 | **newreleases.io**（托管） | GitHub/GitLab/Codeberg/Gitea/Bitbucket/**GNU Savannah** + 17 registries 的 releases **和 tags**；邮件/Slack/Telegram/Discord/Matrix/webhook；instant~weekly | 盯 tag-only 复活（老仓库常只打 tag 不做 release） |
 | libraries.io | 活着但数据集冻结（2024-09 起不再发数据集）、仅 registry | 不作主干 |
 | isitmaintained.com | 壳活着，2019 年起无人维护 | **不用** |
 
-## 5. 自托管/CLI 工具（liveness 全部 2026-10 实测）
+## 5. 自托管/CLI 工具（活跃状态为 2026-10 时点）
 
 | 工具 | 信号 | 通道 | 状态 |
 |---|---|---|---|
@@ -97,7 +97,7 @@ uscan 数据确实全库采集（UDD `upstream` 表，每 30 分钟刷新），�
 
 旁证层：Repology families_newest + tracker RSS（重点包）+ popcon 曲线
 
-下游动作（见 04）：判"该埋"→ 提示发 RM；判"等诈尸"→ 继续盯
+下游动作（见 04 RM 流程文档）：判"该埋"→ 提示发 RM；判"等诈尸"→ 继续盯
 ```
 
-用户需求映射：全部 QA 包（UDD 一次覆盖）/ 持续监控+推送（Apprise 管道）/ 任何生命迹象（发版+commit+URL 复活三路信号）。
+需求映射：全部 QA 包（UDD 一次覆盖）/ 持续监控+推送（Apprise 管道）/ 任何生命迹象（发版+commit+URL 复活三路信号）。
