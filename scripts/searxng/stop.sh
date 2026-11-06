@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 停止并删除 Gleam 的 SearXNG 容器（仅 gleam-searxng 一个目标）。
 # 归属双重校验（容器名 + 镜像为 searxng/searxng）后才停止/删除；
-# 绝不触碰任何无关容器（含 8080 上的 originblame-demo）。
+# 绝不触碰任何无关容器（含同机其他端口的无关服务）。
 # .searxng.env 与 digest.txt 保留（下次 start 幂等复用）。
 set -euo pipefail
 
@@ -25,4 +25,4 @@ if [ "$state" = "running" ]; then
 fi
 echo "removing $CONTAINER"
 docker rm "$CONTAINER" >/dev/null
-echo "done; originblame-demo and other containers untouched"
+echo "done; unrelated containers untouched"

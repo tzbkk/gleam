@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 启动 Gleam 自托管 SearXNG（幂等；Docker 单容器，无 compose）。
 # 安全边界：仅绑定 127.0.0.1:8888；无 host networking、无 --privileged、
-# 无 docker socket 挂载；绝不触碰无关容器（含 8080 上的 originblame-demo）。
+# 无 docker socket 挂载；绝不触碰无关容器（含同机其他端口的无关服务）。
 # 生成的 secret 与镜像 digest 均为 git 忽略的本地文件，不入库。
 set -euo pipefail
 
