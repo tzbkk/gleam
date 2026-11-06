@@ -1,0 +1,58 @@
+# Gleam self-hosted SearXNG settings (loopback 127.0.0.1:8888 only).
+# Deployed by scripts/searxng/start.sh: docker run, no compose, no host
+# networking, no privileged mode, no docker socket mounts, loopback bind.
+#
+# Verified against searxng/searxng 2026.11.1-9ded3bec1:
+# - The entrypoint runs with FORCE_OWNERSHIP=false: this file is mounted
+#   read-only and never chowned.
+# - Fully stateless deployment: start.sh writes no files anywhere and
+#   generates no secrets (see the server.secret_key stance below).
+use_default_settings:
+  engines:
+    # Conservative engine subset (keep_only filters the default engine
+    # list): no API keys, no captcha bypassing. Chosen by live JSON
+    # probing from this network on 2026-11-02: yandex, mwmbl,
+    # 360search, and github returned results here; bing and mojeek
+    # answered but always empty (bot wall for this egress IP);
+    # duckduckgo, wikipedia, wikidata, stackoverflow, startpage, and
+    # qwant were unreachable. Adjust for your own network; other
+    # deployments may add or drop engines freely.
+    keep_only:
+      - yandex
+      - mwmbl
+      - 360search
+      - github
+
+engines:
+  # github's default categories are it/repos (not general); gleam's
+  # search_web queries the default category only (no engines= param),
+  # so fold github into general. yandex, mwmbl, and 360search default
+  # to disabled upstream (active only with explicit engines= selection);
+  # enable them here. Everything else keeps upstream defaults.
+  - name: github
+    categories: [it, repos, general]
+  - name: yandex
+    disabled: false
+  - name: mwmbl
+    disabled: false
+  - name: 360search
+    disabled: false
+
+server:
+  # Deliberately a public constant: this deployment binds to 127.0.0.1
+  # with the limiter off and gleam's JSON path is sessionless, so a
+  # private key would protect nothing, and a stateless start.sh is
+  # worth more. Set your own secret_key here before ever exposing this
+  # service beyond loopback.
+  secret_key: "gleam-loopback-only-public-constant"
+  # Limiter off only because the port binds to 127.0.0.1 (local use);
+  # re-enable before exposing this service beyond loopback.
+  limiter: false
+  image_proxy: false
+
+search:
+  # gleam search_web depends on the JSON API:
+  # GET /search?q=&format=json&language=en
+  formats:
+    - html
+    - json
