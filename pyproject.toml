@@ -3,6 +3,10 @@ name = "gleam"
 version = "0.1.0"
 description = "Gleam / 荧 — minimal evidence-collecting monitor for Debian QA packages (bounded probes, append-only store, local-model investigation agent)"
 requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [
+    {name = "Haolin Xue", email = "tzbkk@outlook.com"},
+]
 # 运行时第三方依赖刻意最小：仅 trafilatura（正文抽取）。
 # 其余全部标准库；测试在无 trafilatura 环境也能跑（回退路径已标注测试）。
 dependencies = [
