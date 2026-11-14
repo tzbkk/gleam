@@ -1,0 +1,1 @@
+{"schema_version": 1, "status": "failed", "kind": "repology-result", "data": {}, "errors": [{"code": "fetch-connection-error", "message": "repology.org unreachable in test", "where": "gleam.core.sources.repology", "details": {}}], "diagnostics": [], "warnings": []}

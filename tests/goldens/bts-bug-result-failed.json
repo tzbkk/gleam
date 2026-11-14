@@ -1,0 +1,1 @@
+{"schema_version": 1, "status": "failed", "kind": "bug-result", "data": {"bug_id": 999999, "source": "soap", "messages": [], "message_count": 0, "truncated": false, "more_available": false, "provenance": []}, "errors": [{"code": "not-found", "message": "HTTP 404 from BTS", "where": "gleam.core.sources.bts", "details": {}}], "diagnostics": [], "warnings": []}

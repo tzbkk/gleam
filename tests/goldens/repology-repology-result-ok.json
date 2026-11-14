@@ -1,0 +1,1 @@
+{"schema_version": 1, "status": "ok", "kind": "repology-result", "data": {"action": "project", "slug": "ncdu", "total_entries": 2, "versions": [{"version": "1.21", "repo_count": 1, "repos": ["aur"], "statuses": ["newest"], "vulnerable_repos": 0}], "debian": [{"repo": "debian_sid", "version": "1.19"}], "note": "project note"}, "errors": [], "diagnostics": [], "warnings": []}

@@ -1,0 +1,1 @@
+{"schema_version": 1, "status": "ok", "kind": "query-result", "data": {"action": "query", "package": "wizznic", "release": null, "datasets": ["sources"], "rows": [{"source": "wizznic", "homepage": "https://example.test"}], "row_count": 1, "truncated": false, "more_available": false, "provenance": ["udd:sources#row=1"]}, "errors": [], "diagnostics": [], "warnings": []}
