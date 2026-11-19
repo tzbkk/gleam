@@ -149,7 +149,7 @@ def solve_varnish_pow(challenge: str, max_seconds: float) \
     started = time.monotonic()
     prefix = f"{challenge};".encode("utf-8")
     for tries in range(POW_TRIES_CAP):
-        if (tries & 0xFF) == 0 and time.monotonic() - started > max_seconds:
+        if (tries & 0xFF) == 0 and time.monotonic() - started >= max_seconds:
             return None
         digest = hashlib.sha256(prefix + str(tries).encode("ascii")).digest()
         if digest[0] == 0:
