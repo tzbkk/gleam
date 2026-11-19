@@ -8,17 +8,17 @@ binder (validation raises ``UsageError`` before any network call).
 
 from __future__ import annotations
 
-import io
 import json
 import tempfile
 import unittest
-from contextlib import chdir, redirect_stderr, redirect_stdout
+from contextlib import chdir
 from unittest.mock import patch
 
 from gleam.core.result import DiagnosticItem, UsageError
 from gleam.core.sources.repology import RepologyPolicy, RepologyResult
 from gleam.entries import repology as repology_entry
 from gleam.entries.repology import KIND_REPOLOGY_RESULT, main
+from tests._helpers import capture_run
 
 REPOLOGY_WHERE = "gleam.core.sources.repology"
 
@@ -65,10 +65,7 @@ def fake_repology_result(status="ok", action="project", slug="ncdu",
 
 
 def run_main(argv):
-    out, err = io.StringIO(), io.StringIO()
-    with redirect_stdout(out), redirect_stderr(err):
-        code = main(argv)
-    return code, out.getvalue(), err.getvalue()
+    return capture_run(main, argv)
 
 
 class RepologyEntryOkPaths(unittest.TestCase):

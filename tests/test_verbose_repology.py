@@ -36,13 +36,9 @@ from gleam.core.sources.repology import (
 from gleam.core.verbose import make_verbose
 from gleam.entries import repology as repology_entry
 from tests.test_sources_repology import NCDU_ENTRIES, PATCH_TARGET
+from tests.test_transport import FakeResponse, patch_env
 from tests.test_verbose import FIXED_TIME, LINE_SHAPE, run_main
-from tests.test_verbose_fetcher import (
-    PUBLIC_IP,
-    FakeResponse,
-    patch_env,
-    route_map,
-)
+from tests.test_verbose_fetcher import PUBLIC_IP, route_map
 
 PREFIX = "[repology 12:34:56] "
 PROJECT_URL = build_project_url("https://repology.org", "ncdu")

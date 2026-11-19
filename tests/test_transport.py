@@ -507,7 +507,7 @@ class LimitsAndRetentionTest(unittest.TestCase):
         self.assertFalse(out.ok)
         self.assertEqual(out.error["kind"], "budget-exhausted")
 
-    def test_default_max_requests_is_twelve(self):
+    def test_default_max_requests_is_fifty_two(self):
         # unified request-budget default
         self.assertEqual(DEFAULT_POLICY["max_requests"], 52)
 

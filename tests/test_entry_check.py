@@ -9,12 +9,10 @@ byte- and mtime-identical before and after (pure read).
 """
 
 import hashlib
-import io
 import json
 import os
 import tempfile
 import unittest
-from contextlib import redirect_stderr, redirect_stdout
 
 from gleam.core.result import GOLDEN_FIELD_ORDER, UsageError, exit_code_for
 from gleam.core.storage import LAYOUT_DIRS
@@ -28,6 +26,7 @@ from gleam.entries.check import (
     render_json,
     run,
 )
+from tests._helpers import capture_run
 
 CHECK_DATA_FIELDS = [
     "store",
@@ -103,10 +102,7 @@ def layout_run(store, run_id):
 
 def run_main(argv):
     """Run main(argv) capturing stdout/stderr; returns (code, out, err)."""
-    out, err = io.StringIO(), io.StringIO()
-    with redirect_stdout(out), redirect_stderr(err):
-        code = main(argv)
-    return code, out.getvalue(), err.getvalue()
+    return capture_run(main, argv)
 
 
 def snapshot(root):
@@ -471,19 +467,17 @@ class StoreRootShapeTests(unittest.TestCase):
     def test_run_directory_as_store_exits_2(self):
         with tempfile.TemporaryDirectory() as tmp:
             run_path = layout_run(tmp, RUN_A)
-            code, out, err = run_main(["--store", run_path])
-        self.assertEqual(code, 2)
-        self.assertEqual(out, "")
-        self.assertIn("run directory", err)
-        self.assertIn("store root", err)
-
-    def test_run_directory_as_store_json_emits_no_result(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            run_path = layout_run(tmp, RUN_A)
-            code, out, err = run_main(["--store", run_path, "--json"])
-        self.assertEqual(code, 2)
-        self.assertEqual(out, "")
-        self.assertTrue(err.strip())
+            for label, extra, err_parts in (
+                    ("human", [], ("run directory", "store root")),
+                    ("json", ["--json"], ())):
+                with self.subTest(label):
+                    code, out, err = run_main(
+                        ["--store", run_path, *extra])
+                    self.assertEqual(code, 2)
+                    self.assertEqual(out, "")
+                    self.assertTrue(err.strip())
+                    for part in err_parts:
+                        self.assertIn(part, err)
 
     def test_function_api_raises_usage_error_for_run_directory(self):
         with tempfile.TemporaryDirectory() as tmp:

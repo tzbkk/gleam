@@ -14,7 +14,7 @@ import io
 import re
 import time
 import unittest
-from contextlib import redirect_stderr, redirect_stdout
+from contextlib import redirect_stderr
 from unittest.mock import patch
 
 from gleam.core.config import bind
@@ -35,6 +35,7 @@ from gleam.entries import repology as repology_entry
 from gleam.entries import searxng as searxng_entry
 from gleam.entries import udd as udd_entry
 from gleam.entries import version as version_entry
+from tests._helpers import capture_run as run_main
 
 WORKING_MODULES = ("udd", "bts", "repology", "check", "investigate",
                    "searxng")
@@ -62,15 +63,6 @@ LINE_SHAPE = re.compile(
     r"\d{2}:\d{2}:\d{2}\] ")
 FIXED_TIME = time.struct_time(
     (2026, 11, 19, 12, 34, 56, 3, 323, 0))
-
-
-def run_main(entry_main, argv):
-    """Run one entry main() capturing stdout/stderr (the established
-    test_entry_meta.py pattern)."""
-    out, err = io.StringIO(), io.StringIO()
-    with redirect_stdout(out), redirect_stderr(err):
-        code = entry_main(argv)
-    return code, out.getvalue(), err.getvalue()
 
 
 class VerboseBindingTests(unittest.TestCase):

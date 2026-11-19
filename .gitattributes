@@ -1,0 +1,2 @@
+# Goldens are byte-pinned (to_json() + LF); never smudge to CRLF on checkout.
+tests/goldens/*.json text eol=lf

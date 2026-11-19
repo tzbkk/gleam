@@ -3,9 +3,10 @@ line, robots verdicts through the shared robots_line helper, DNS pin
 success/rejection, response bytes/redirect-hop lines, and the
 robots.txt pre-fetch silence guard.
 
-Direct Fetcher tests on the transport stub harness (the
-test_transport.py pattern): DNS patched at safety.socket.getaddrinfo,
-connections patched at net._open_connection -- no network. Narration
+Direct Fetcher tests on the transport stub harness (the stubs are
+imported from test_transport.py): DNS patched at
+safety.socket.getaddrinfo, connections patched at
+net._open_connection -- no network. Narration
 is captured through make_verbose(stream=io.StringIO()) with the clock
 pinned, so every line is asserted with its full prefix. Budget numbers
 are derived from the policy caps each fetcher is built with, never
@@ -13,88 +14,18 @@ literals.
 """
 
 import io
-import ipaddress
-import socket
 import time
 import unittest
 from unittest.mock import patch
 
 from gleam.core.transport.net import Fetcher
 from gleam.core.verbose import _quiet, make_verbose
+from tests.test_transport import FakeResponse, patch_env
 
 PUBLIC_IP = "93.184.216.34"
 FIXED_TIME = time.struct_time(
     (2026, 11, 19, 12, 34, 56, 3, 323, 0))
 PREFIX = "[repology 12:34:56] "
-
-
-def fake_dns(records):
-    def getaddrinfo(host, *args, **kwargs):
-        try:
-            addr = ipaddress.ip_address(host)
-        except ValueError:
-            pass
-        else:
-            family = socket.AF_INET if addr.version == 4 else socket.AF_INET6
-            return [(family, socket.SOCK_STREAM, 6, "", (str(addr), 0))]
-        if host not in records:
-            raise OSError("no address for", host)
-        return [(socket.AF_INET, socket.SOCK_STREAM, 6, "",
-                 (records[host], 0))]
-    return getaddrinfo
-
-
-class FakeResponse:
-    def __init__(self, status, headers=None, body=b""):
-        self.status = status
-        self._headers = headers or {}
-        self._body = body
-        self._pos = 0
-
-    def getheaders(self):
-        return list(self._headers.items())
-
-    def read(self, n=-1):
-        if self._pos >= len(self._body):
-            return b""
-        if n and n > 0:
-            chunk = self._body[self._pos:self._pos + n]
-        else:
-            chunk = self._body[self._pos:]
-        self._pos += len(chunk)
-        return chunk
-
-
-class FakeConnection:
-    def __init__(self, scheme, host, port, pinned_ip, timeout, route):
-        self.host = host
-        self.route = route
-        self.sock = None  # _single_request retimes the socket mid-body
-        self.requests = []
-
-    def request(self, method, path, body=None, headers=None):
-        self.requests.append((method, path))
-
-    def getresponse(self):
-        method, path = self.requests[-1]
-        return self.route(self.host, path)
-
-    def close(self):
-        pass
-
-
-def patch_env(testcase, dns_records, route):
-    conn_factory = (lambda scheme, host, port, pinned_ip, timeout:
-                    FakeConnection(scheme, host, port, pinned_ip, timeout,
-                                   route))
-    patchers = [
-        patch("gleam.core.transport.safety.socket.getaddrinfo",
-              fake_dns(dns_records)),
-        patch("gleam.core.transport.net._open_connection", conn_factory),
-    ]
-    for p in patchers:
-        p.start()
-        testcase.addCleanup(p.stop)
 
 
 def route_map(routes, default=None):

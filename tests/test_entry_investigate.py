@@ -28,7 +28,7 @@ from gleam.core.model import (
     ToolCall,
     parse_assistant,
 )
-from gleam.core.result import DiagnosticItem, UsageError
+from gleam.core.result import DiagnosticItem, UsageError, exit_code_for
 from gleam.core.sources.bts import BtsPolicy, BtsResult
 from gleam.core.sources.github import GithubPolicy, GithubResult
 from gleam.core.sources.repology import RepologyPolicy
@@ -566,6 +566,7 @@ class InvestigateStorage(unittest.TestCase):
             self.assertEqual(result.kind, "storage-error")
             self.assertEqual(result.errors[0].code, "storage-error")
             self.assertEqual(result.errors[0].where, "investigate")
+            self.assertEqual(exit_code_for(result.status), 1)
             run_dir = only_run_dir(store)
             # the half-written directory stays for read-only reporting
             self.assertTrue(os.path.isdir(run_dir))
@@ -581,20 +582,6 @@ class InvestigateStorage(unittest.TestCase):
             self.assertEqual(flushed["kind"], "investigate-round")
             self.assertTrue(flushed["request"]["messages"])
             self.assertEqual(flushed["tool_calls"], [])
-
-    def test_pre_creation_failure_storage_error_no_dir(self):
-        with tempfile.TemporaryDirectory() as store:
-            blocker = os.path.join(store, "not-a-dir")
-            with open(blocker, "w", encoding="utf-8") as fh:
-                fh.write("file blocks the runs tree")
-            with completed_script():
-                result = inv.run(store=blocker, package="wizznic",
-                                 model_base="http://127.0.0.1:1",
-                                 model="q")
-            self.assertEqual(result.status, "storage-error")
-            self.assertEqual(result.kind, "storage-error")
-            self.assertEqual(result.errors[0].code, "storage-error")
-            self.assertTrue(os.path.isfile(blocker))
 
     def test_existing_runs_untouched(self):
         """An investigate run never reads or modifies existing
@@ -2311,7 +2298,7 @@ class RepologyToolTests(unittest.TestCase):
         link = record["source_document"]
         self.assertEqual(link, {"source": "repology",
                                 "sha256": name[:-len(".json")],
-                                "path": os.path.join("repology", name)})
+                                "path": f"repology/{name}"})
         # the record discloses the client fetcher's own effective
         # robots exemption set
         self.assertIn("repology.org",

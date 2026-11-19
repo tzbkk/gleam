@@ -17,13 +17,12 @@ from __future__ import annotations
 
 import contextlib
 import importlib.resources
-import io
 import json
 import os
 import tempfile
 import types
 import unittest
-from contextlib import chdir, redirect_stderr, redirect_stdout
+from contextlib import chdir
 from dataclasses import replace
 from unittest.mock import patch
 
@@ -52,6 +51,7 @@ from gleam.entries.searxng import (
     main,
 )
 from gleam.router import dispatch
+from tests._helpers import capture_run
 from tests.test_searxng_lifecycle import (
     DOCKER,
     FOREIGN_LABELS,
@@ -89,10 +89,7 @@ SETTINGS_RESOURCE = str(importlib.resources.files("gleam") / "data"
 
 
 def run_main(argv):
-    out, err = io.StringIO(), io.StringIO()
-    with redirect_stdout(out), redirect_stderr(err):
-        code = main(argv)
-    return code, out.getvalue(), err.getvalue()
+    return capture_run(main, argv)
 
 
 def bring_up_success(action="created"):

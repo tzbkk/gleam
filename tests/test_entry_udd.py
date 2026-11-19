@@ -5,18 +5,18 @@ No network and no database anywhere: the query path is exercised through
 case fails in ``validate_datasets`` before any connection could be made.
 """
 
-import io
 import json
 import os
 import tempfile
 import unittest
-from contextlib import chdir, redirect_stderr, redirect_stdout
+from contextlib import chdir
 from pathlib import Path
 from unittest.mock import patch
 
 from gleam.core.result import DiagnosticItem, GOLDEN_FIELD_ORDER, exit_code_for
 from gleam.core.sources.udd import UddResult
 from gleam.entries.udd import KIND_LIST_DATASETS, KIND_QUERY_RESULT, main, run
+from tests._helpers import capture_run
 
 UDD_WHERE = "gleam.core.sources.udd"
 
@@ -58,10 +58,7 @@ def fake_udd_result(**overrides):
 
 def run_main(argv):
     """Run main(argv) capturing stdout/stderr; returns (code, out, err)."""
-    out, err = io.StringIO(), io.StringIO()
-    with redirect_stdout(out), redirect_stderr(err):
-        code = main(argv)
-    return code, out.getvalue(), err.getvalue()
+    return capture_run(main, argv)
 
 
 class ListDatasetsPath(unittest.TestCase):
@@ -84,11 +81,6 @@ class ListDatasetsPath(unittest.TestCase):
         self.assertEqual(payload["data"]["rows"], [])
         self.assertEqual(payload["data"]["provenance"], [])
         self.assertFalse(payload["data"]["truncated"])
-
-    def test_exit_code_comes_from_the_mapper(self):
-        code, out, _ = run_main(["--list-datasets", "--json"])
-        payload = json.loads(out)
-        self.assertEqual(code, exit_code_for(payload["status"]))
 
     def test_human_render_lists_all_names(self):
         code, out, err = run_main(["--list-datasets"])

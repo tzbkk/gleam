@@ -12,7 +12,6 @@ flag.
 """
 
 import importlib.metadata
-import io
 import os
 import re
 import subprocess
@@ -20,7 +19,6 @@ import sys
 import tempfile
 import tomllib
 import unittest
-from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from unittest.mock import patch
 
@@ -28,6 +26,7 @@ from gleam.core.config import bind
 from gleam.entries import help as help_entry
 from gleam.entries import version as version_entry
 from gleam.router import dispatch
+from tests._helpers import capture_run as run_main
 
 MODULES = ("udd", "bts", "repology", "check", "investigate", "searxng",
            "help", "version")
@@ -43,14 +42,6 @@ PRIMARY_FLAGS = {
 }
 VERSION_SHAPE = re.compile(r"[0-9]+\.[0-9]+\.[0-9]+\Z")
 PYPROJECT = Path(__file__).resolve().parents[1] / "pyproject.toml"
-
-
-def run_main(entry_main, argv):
-    """Run one entry main() capturing stdout/stderr."""
-    out, err = io.StringIO(), io.StringIO()
-    with redirect_stdout(out), redirect_stderr(err):
-        code = entry_main(argv)
-    return code, out.getvalue(), err.getvalue()
 
 
 def pyproject_version():

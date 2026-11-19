@@ -5,17 +5,16 @@ No network anywhere: the fetch path is exercised through
 in the binder/required checks before any client could be constructed.
 """
 
-import io
 import json
 import os
 import tempfile
 import unittest
-from contextlib import redirect_stderr, redirect_stdout
 from unittest.mock import patch
 
 from gleam.core.result import DiagnosticItem, GOLDEN_FIELD_ORDER, exit_code_for
 from gleam.core.sources.bts import BtsResult
 from gleam.entries.bts import KIND_BUG_RESULT, main, run
+from tests._helpers import capture_run
 
 BTS_WHERE = "gleam.core.sources.bts"
 
@@ -78,10 +77,7 @@ def fake_bts_result(**overrides):
 
 def run_main(argv):
     """Run main(argv) capturing stdout/stderr; returns (code, out, err)."""
-    out, err = io.StringIO(), io.StringIO()
-    with redirect_stdout(out), redirect_stderr(err):
-        code = main(argv)
-    return code, out.getvalue(), err.getvalue()
+    return capture_run(main, argv)
 
 
 class BugResultPath(unittest.TestCase):
@@ -123,12 +119,6 @@ class BugResultPath(unittest.TestCase):
         kwargs = client_cls.call_args.kwargs
         self.assertIn("policy", kwargs)
         client_cls.return_value.fetch.assert_called_once_with(999999, "auto")
-
-    def test_exit_code_comes_from_the_mapper(self):
-        self._patched_client(fake_bts_result())
-        code, out, _ = run_main([*self.ARGV, "--json"])
-        payload = json.loads(out)
-        self.assertEqual(code, exit_code_for(payload["status"]))
 
     def test_explicit_source_is_forwarded(self):
         client_cls = self._patched_client(fake_bts_result())

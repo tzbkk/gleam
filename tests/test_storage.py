@@ -167,7 +167,8 @@ class WriteTest(unittest.TestCase):
         for root, dirs, files in os.walk(self.store.run_dir):
             for name in files:
                 found.add(os.path.relpath(os.path.join(root, name),
-                                          self.store.run_dir))
+                                          self.store.run_dir)
+                          .replace(os.sep, "/"))
         expected = {
             "run.json",
             f"observations/{obs_id}.json",

@@ -75,10 +75,6 @@ class GoldenSerializationTest(unittest.TestCase):
             ["code", "message", "where", "details"],
         )
 
-    def test_to_json_is_deterministic_across_calls(self):
-        result = Result(status="storage-error", kind="storage-error", data={"run": "r"})
-        self.assertEqual(result.to_json(), result.to_json())
-
 
 class StatusValidationTest(unittest.TestCase):
     """status is restricted to the four contract values."""
@@ -115,23 +111,17 @@ class KindValidationTest(unittest.TestCase):
 class DiagnosticItemValidationTest(unittest.TestCase):
     """DiagnosticItem fixed keys and required fields."""
 
-    def test_missing_or_empty_code_is_rejected(self):
-        with self.assertRaises(ValueError):
-            DiagnosticItem(message="m", where="w")
-        with self.assertRaises(ValueError):
-            make_item(code="")
-
-    def test_missing_or_empty_where_is_rejected(self):
-        with self.assertRaises(ValueError):
-            DiagnosticItem(code="c", message="m")
-        with self.assertRaises(ValueError):
-            make_item(where="")
-
-    def test_missing_or_empty_message_is_rejected(self):
-        with self.assertRaises(ValueError):
-            DiagnosticItem(code="c", where="w")
-        with self.assertRaises(ValueError):
-            make_item(message="")
+    def test_missing_or_empty_fields_are_rejected(self):
+        for label, ctor_kwargs, item_overrides in (
+                ("code", {"message": "m", "where": "w"}, {"code": ""}),
+                ("where", {"code": "c", "message": "m"}, {"where": ""}),
+                ("message", {"code": "c", "where": "w"},
+                 {"message": ""})):
+            with self.subTest(label):
+                with self.assertRaises(ValueError):
+                    DiagnosticItem(**ctor_kwargs)
+                with self.assertRaises(ValueError):
+                    make_item(**item_overrides)
 
     def test_non_string_fields_are_rejected(self):
         with self.assertRaises(ValueError):

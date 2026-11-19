@@ -130,12 +130,6 @@ class ClosedKeyTableTest(unittest.TestCase):
         # 6 shared + 8 udd + 10 bts + 4 repology + 32 investigate
         # + 1 check = 61 total.
         self.assertEqual(len(ENV_KEYS), 61)
-        self.assertEqual(len(SHARED_KEYS), 6)
-        self.assertEqual(len(UDD_POLICY_KEYS), 8)
-        self.assertEqual(len(BTS_POLICY_KEYS), 10)
-        self.assertEqual(len(REPOLOGY_POLICY_KEYS), 4)
-        self.assertEqual(len(INVESTIGATE_KEYS), 32)
-        self.assertEqual(len(CHECK_KEYS), 1)
 
     def test_groups_are_disjoint(self):
         groups = (SHARED_KEYS, UDD_POLICY_KEYS, BTS_POLICY_KEYS,

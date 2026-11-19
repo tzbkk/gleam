@@ -26,10 +26,10 @@ from gleam.core.storage import RunStore
 from gleam.core.transport import FetchOutcome, HopResult
 from gleam.core.verbose import format_count, make_verbose
 from gleam.entries import investigate as inv
+import tests.test_entry_investigate as inv_fixtures
 from tests.test_entry_investigate import (
     BTS_SIX_SOURCE_BODY,
     SIX_SOURCE_SEARCH,
-    BugFetchSingleArtifactTests,
     FakeFetcher,
     FakeGithubClient,
     FakeSearchClient,
@@ -165,7 +165,7 @@ class InvestigateVerboseSmokeTests(VerbosePinnedClock):
                     repology_transport_patch(), \
                     model_patch(script):
                 bts_cls.return_value.fetch.return_value = \
-                    BugFetchSingleArtifactTests._ok_result(
+                    inv_fixtures.BugFetchSingleArtifactTests._ok_result(
                         BTS_SIX_SOURCE_BODY)
                 bts_cls.return_value.request_count = 1
                 udd_cls.return_value.query.return_value = \

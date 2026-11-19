@@ -242,45 +242,47 @@ class ChatTransportTests(unittest.TestCase):
 
 
 class EnvelopeSafetyTests(unittest.TestCase):
-    def test_missing_arguments_is_safety_failure(self):
-        # Plan QA scenario (a), verbatim shape.
-        msg = {"content": "",
-               "tool_calls": [{"id": "a",
-                               "function": {"name": "fetch_url"}}]}
-        out = parse_assistant(msg)
-        self.assertTrue(out.safety_failure)
-        self.assertFalse(out.tool_calls)
-        self.assertEqual(out.safety_error["kind"], "malformed-tool-calls")
-
-    def test_missing_id_is_safety_failure(self):
-        msg = {"content": "", "tool_calls": [
-            {"function": {"name": "fetch_url", "arguments": "{}"}}]}
-        out = parse_assistant(msg)
-        self.assertTrue(out.safety_failure)
-        self.assertFalse(out.tool_calls)
-
-    def test_duplicate_id_is_safety_failure(self):
-        msg = {"content": "", "tool_calls": [
-            {"id": "a", "function": {"name": "fetch_url",
-                                     "arguments": "{}"}},
-            {"id": "a", "function": {"name": "fetch_url",
-                                     "arguments": "{}"}}]}
-        out = parse_assistant(msg)
-        self.assertTrue(out.safety_failure)
-        self.assertIn("duplicate", out.safety_error["message"])
-
-    def test_function_not_an_object_is_safety_failure(self):
-        msg = {"content": "", "tool_calls": [
-            {"id": "a", "function": "fetch_url"}]}
-        out = parse_assistant(msg)
-        self.assertTrue(out.safety_failure)
-        self.assertEqual(out.safety_error["kind"], "malformed-tool-calls")
-
-    def test_name_not_a_string_is_safety_failure(self):
-        msg = {"content": "", "tool_calls": [
-            {"id": "a", "function": {"name": 7, "arguments": "{}"}}]}
-        out = parse_assistant(msg)
-        self.assertTrue(out.safety_failure)
+    def test_malformed_tool_calls_shapes_are_safety_failures(self):
+        # Plan QA scenario (a), verbatim shapes: missing arguments,
+        # missing id, duplicate id, function not an object, name not
+        # a string. A None column means the case never pinned that
+        # field.
+        cases = (
+            ("missing-arguments",
+             {"content": "",
+              "tool_calls": [{"id": "a",
+                              "function": {"name": "fetch_url"}}]},
+             "malformed-tool-calls", None),
+            ("missing-id",
+             {"content": "", "tool_calls": [
+                 {"function": {"name": "fetch_url", "arguments": "{}"}}]},
+             None, None),
+            ("duplicate-id",
+             {"content": "", "tool_calls": [
+                 {"id": "a", "function": {"name": "fetch_url",
+                                          "arguments": "{}"}},
+                 {"id": "a", "function": {"name": "fetch_url",
+                                          "arguments": "{}"}}]},
+             None, "duplicate"),
+            ("function-not-an-object",
+             {"content": "", "tool_calls": [
+                 {"id": "a", "function": "fetch_url"}]},
+             "malformed-tool-calls", None),
+            ("name-not-a-string",
+             {"content": "", "tool_calls": [
+                 {"id": "a", "function": {"name": 7, "arguments": "{}"}}]},
+             None, None),
+        )
+        for label, msg, kind, message_part in cases:
+            with self.subTest(label):
+                out = parse_assistant(msg)
+                self.assertTrue(out.safety_failure)
+                self.assertFalse(out.tool_calls)
+                if kind is not None:
+                    self.assertEqual(out.safety_error["kind"], kind)
+                if message_part is not None:
+                    self.assertIn(message_part,
+                                  out.safety_error["message"])
 
     def test_malformed_envelope_via_chat_executes_zero_tools(self):
         body = _choices_body(
@@ -358,20 +360,15 @@ class RejectionFeedbackTests(unittest.TestCase):
         self.assertEqual(message["tool_call_id"], "a")
         self.assertIn("unknown-tool", message["content"])
 
-    def test_malformed_json_arguments_rejected(self):
-        args, err = parse_tool_arguments('{"url": ')
-        self.assertIsNone(args)
-        self.assertEqual(err["kind"], "malformed-arguments")
-
-    def test_non_string_arguments_rejected(self):
-        args, err = parse_tool_arguments(17)
-        self.assertIsNone(args)
-        self.assertEqual(err["kind"], "malformed-arguments")
-
-    def test_non_object_arguments_rejected(self):
-        args, err = parse_tool_arguments("[1, 2]")
-        self.assertIsNone(args)
-        self.assertEqual(err["kind"], "malformed-arguments")
+    def test_rejected_argument_shapes(self):
+        for label, raw in (
+                ("malformed-json", '{"url": '),
+                ("non-string", 17),
+                ("non-object", "[1, 2]")):
+            with self.subTest(label):
+                args, err = parse_tool_arguments(raw)
+                self.assertIsNone(args)
+                self.assertEqual(err["kind"], "malformed-arguments")
 
     def test_nan_infinity_overflow_arguments_rejected(self):
         for raw in ('{"x": NaN}', '{"x": Infinity}', '{"x": -Infinity}',

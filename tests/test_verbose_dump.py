@@ -60,8 +60,9 @@ from tests.test_searxng_validate import (
     FakeSearxngClient,
     search_result,
 )
+from tests.test_transport import patch_env
 from tests.test_verbose import FIXED_TIME, run_main
-from tests.test_verbose_fetcher import PUBLIC_IP, patch_env
+from tests.test_verbose_fetcher import PUBLIC_IP
 from tests.test_verbose_investigate import entry_argv
 from tests.test_verbose_repology import stub_route
 from tests.test_verbose_udd import QUERY_ARGV, SRC_ROW

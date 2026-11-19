@@ -6,8 +6,8 @@ treat a whitespace-only key as unset, and keep the key out of the audit
 record, the ChatResult, endpoint strings, error messages, and reprs.
 
 Transport is faked by patching ``gleam.core.model.http.client`` — the
-same zero-network seam as tests/test_model.py (the fakes are mirrored
-here, not imported).
+same zero-network seam as tests/test_model.py (the fakes are imported
+from there, not mirrored).
 """
 
 from __future__ import annotations
@@ -16,8 +16,15 @@ import json
 import unittest
 from unittest.mock import patch
 
-from gleam.core.model import ModelClient, ModelConfigError
+from gleam.core.model import ModelConfigError
 from gleam.core.model.client import http_json
+from tests.test_model import (
+    _FakeHTTPConnection,
+    _FakeHTTPSConnection,
+    _client,
+    _install_fakes,
+    _patched_http,
+)
 
 SECRET = "sk-test-0123456789abcdef"
 
@@ -27,69 +34,9 @@ _PLAIN_HEADERS = {"Accept": "application/json",
                   "Content-Type": "application/json"}
 
 
-class _FakeResponse:
-    def __init__(self, status, body_bytes):
-        self.status = status
-        self._body = body_bytes
-
-    def read(self, limit=-1):
-        if isinstance(limit, int) and limit > 0:
-            return self._body[:limit]
-        return self._body
-
-
-class _FakeHTTPConnection:
-    next_response = None
-    request_error = None
-    created = []
-
-    def __init__(self, host, port=None, timeout=None):
-        self.host = host
-        self.port = port
-        self.timeout = timeout
-        self.calls = []
-        _FakeHTTPConnection.created.append(self)
-
-    def request(self, method, path, body=None, headers=None):
-        self.calls.append({"method": method, "path": path, "body": body,
-                           "headers": dict(headers or {})})
-        if _FakeHTTPConnection.request_error is not None:
-            raise _FakeHTTPConnection.request_error
-
-    def getresponse(self):
-        return _FakeHTTPConnection.next_response
-
-    def close(self):
-        pass
-
-
-class _FakeHTTPSConnection(_FakeHTTPConnection):
-    pass
-
-
-def _patched_http(status=200, body=b"{}"):
-    _FakeHTTPConnection.next_response = _FakeResponse(status, body)
-    _FakeHTTPConnection.request_error = None
-    _FakeHTTPConnection.created = []
-    return patch("gleam.core.model.http.client")
-
-
-def _install_fakes(hc):
-    hc.HTTPConnection = _FakeHTTPConnection
-    hc.HTTPSConnection = _FakeHTTPSConnection
-
-
 def _ok_body():
     return json.dumps({"choices": [{"message": {"content": "ok"},
                                     "finish_reason": "stop"}]}).encode()
-
-
-def _client(audit=None, **kw):
-    kw.setdefault("base", "http://127.0.0.1:1")
-    kw.setdefault("model", "q")
-    if audit is not None:
-        kw["audit"] = audit
-    return ModelClient(**kw)
 
 
 def _sent_headers(**client_kw):
