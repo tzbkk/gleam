@@ -366,13 +366,14 @@ class ValidateChainTests(unittest.TestCase):
         self.assertFalse(outcome.steps[2].ok)
         self.assertEqual(FakeSearxngClient.calls, [])
 
-    def test_fail_healthz_non_2xx(self):
-        self.wire(opener=FakeHealthzOpener(
-            error=http_error(503, "Service Unavailable")))
+    def test_fail_healthz_non_2xx_closes_the_error(self):
+        error = http_error(503, "Service Unavailable")
+        self.wire(opener=FakeHealthzOpener(error=error))
         outcome = run_validate(NAME, BASE)
         self.assertEqual(outcome.verdict, VERDICT_FAIL)
         self.assertEqual(outcome.errors[0].code, CODE_HEALTHZ_UNHEALTHY)
         self.assertIn("HTTP 503", outcome.steps[2].detail)
+        self.assertTrue(error.closed)
 
     def test_fail_healthz_redirect_is_not_followed(self):
         opener = FakeHealthzOpener(error=http_error(302, "Found"))

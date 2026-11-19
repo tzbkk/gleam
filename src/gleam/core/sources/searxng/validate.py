@@ -33,6 +33,7 @@ from __future__ import annotations
 import urllib.error
 import urllib.request
 from collections.abc import Callable
+from contextlib import suppress
 from dataclasses import dataclass
 from typing import Any
 
@@ -140,8 +141,13 @@ def _healthz(base: str,
             verbose(f"GET {url} -> {response.status}")
             return True, url, detail
     except urllib.error.HTTPError as exc:
-        verbose(f"GET {url} -> {exc.code}")
-        return False, url, f"HTTP {exc.code}"
+        # 3.14: HTTPError owns a tempfile closer; close it so no GC
+        # ResourceWarning reaches the verbose stream.
+        code = exc.code
+        with suppress(OSError):
+            exc.close()
+        verbose(f"GET {url} -> {code}")
+        return False, url, f"HTTP {code}"
     except urllib.error.URLError as exc:
         verbose(f"GET {url} -> error: {exc.reason}")
         return False, url, f"URLError: {exc.reason}"
