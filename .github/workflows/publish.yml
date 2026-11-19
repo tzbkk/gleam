@@ -1,0 +1,98 @@
+name: publish
+
+# Publishes to PyPI if and only if BOTH hold:
+#   1. a new v* tag was pushed (this workflow has no other trigger), and
+#   2. the `ci` workflow succeeded on that exact commit — the ci-gate job
+#      waits for the ci run of $GITHUB_SHA and fails unless it ends green,
+#      which stops build and publish before anything is uploaded.
+# Consequence: no tag -> this workflow never starts; ci failed or never
+# appeared -> nothing is built or published.
+#
+# Load-bearing assumption: .github/workflows/ci.yml keeps `on: push` without
+# a branch/tag filter, so a ci run exists for every tag push. Filtering ci
+# to branches only would make ci-gate time out (fail closed, still safe).
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  ci-gate:
+    name: gate on ci success
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Wait for the ci run of this commit and require success
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -eu
+          deadline=$((SECONDS + 2700))
+          run_id=""
+          while :; do
+            if run_id="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow ci.yml \
+                           --commit "$GITHUB_SHA" --limit 1 --json databaseId \
+                           --jq '.[0].databaseId' 2>/dev/null)" && [ -n "$run_id" ]; then
+              break
+            fi
+            if [ "$SECONDS" -ge "$deadline" ]; then
+              echo "publish: no ci run appeared for commit $GITHUB_SHA within 45 minutes" >&2
+              exit 1
+            fi
+            sleep 15
+          done
+          echo "publish: gating on ci run $run_id for $GITHUB_SHA"
+          gh run watch "$run_id" --repo "$GITHUB_REPOSITORY" --exit-status --interval 30
+          echo "publish: ci passed on $GITHUB_SHA"
+
+  build:
+    name: build and verify distributions
+    needs: ci-gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v10.3.3
+      - run: uv sync
+      - name: Tag must match the version single source (pyproject.toml)
+        run: |
+          set -eu
+          tag="${GITHUB_REF_NAME#v}"
+          py="$(uv run python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
+          cli="$(uv run python -m gleam version)"
+          echo "tag=v$tag pyproject=$py gleam_version=$cli"
+          if [ "$tag" != "$py" ] || [ "$cli" != "$py" ]; then
+            echo "publish: version mismatch — the tag must be exactly v\$pyproject_version" >&2
+            exit 1
+          fi
+      - run: uv build --sdist --wheel
+      - name: Metadata and content checks
+        run: |
+          set -eu
+          uvx twine check dist/*
+          unzip -Z1 dist/*.whl | grep -qx 'gleam/data/searxng-settings.yml' \
+            || { echo "publish: searxng-settings.yml missing from the wheel" >&2; exit 1; }
+          tar -tzf dist/*.tar.gz | grep -q 'LICENSE' \
+            || { echo "publish: LICENSE missing from the sdist" >&2; exit 1; }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    name: upload to PyPI (trusted publishing)
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write  # OIDC for PyPI trusted publishing
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          attestations: true
